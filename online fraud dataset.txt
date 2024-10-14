@@ -1,0 +1,132 @@
+// Online Fraud.csv
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.feature_selection import SelectKBest, f_classif
+
+# Load the dataset
+df = pd.read_csv('/content/onlinedata_fraud.csv')
+# Dataset before feature selection
+print(df.head(6))
+
+# Separate features (X) and target variable (y)
+# Assuming 'Class/ASD Traits ' is the target variable
+X = df.drop('isFraud', axis=1)
+y = df['isFraud']
+
+# Feature selection using SelectKBest
+selector = SelectKBest(f_classif, k=5)
+X_selected = selector.fit_transform(X, y)
+
+# Dataset after feature selection
+print(df.head(6))
+
+# Scale the data using StandardScaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_selected)
+
+# Split the dataset into training and remaining data (80% for training, 20% for validation and testing)
+X_train, X_rem, y_train, y_rem = train_test_split(X_scaled, y, test_size=0.4, random_state=42, shuffle=True)
+
+# Further split the remaining data into validation and testing sets (50% each, resulting in 20% of the original data for each)
+X_val, X_test, y_val, y_test = train_test_split(X_rem, y_rem, test_size=0.5, random_state=42, shuffle=True)
+
+# Save the training set to a file
+pd.DataFrame(X_train).to_csv('X_train.csv', index=False)
+pd.DataFrame(y_train).to_csv('y_train.csv', index=False)
+
+# Save the validation set to a file
+pd.DataFrame(X_val).to_csv('X_val.csv', index=False)
+pd.DataFrame(y_val).to_csv('y_val.csv', index=False)
+
+# Save the testing set to a file
+pd.DataFrame(X_test).to_csv('X_test.csv', index=False)
+pd.DataFrame(y_test).to_csv('y_test.csv', index=False)
+
+# Load the training set from file
+X_train = pd.read_csv('X_train.csv').values
+y_train = pd.read_csv('y_train.csv').values
+
+# Load the validation set from file
+X_val = pd.read_csv('X_val.csv').values
+y_val = pd.read_csv('y_val.csv').values
+
+# Load the testing set from file
+X_test = pd.read_csv('X_test.csv').values
+y_test = pd.read_csv('y_test.csv').values
+
+# Define the Linear Regression model
+lr_model = LinearRegression()
+
+# Train the Linear Regression model on the training data
+lr_model.fit(X_train, y_train)
+
+# Make predictions on the validation data
+y_pred_val = lr_model.predict(X_val)
+
+# Evaluate the model's performance on the validation data
+mse_val = mean_squared_error(y_val, y_pred_val)
+r2_val = r2_score(y_val, y_pred_val)
+print("Validation MSE:", mse_val)
+print("Validation R2:", r2_val)
+
+# Make predictions on the testing data
+y_pred_test = lr_model.predict(X_test)
+
+# Evaluate the model's performance on the testing data
+mse_test = mean_squared_error(y_test, y_pred_test)
+r2_test = r2_score(y_test, y_pred_test)
+print("Testing MSE:", mse_test)
+print("Testing R2:", r2_test)
+
+print("Decision Treess................ ")
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Create a Decision Tree Classifier
+dt_model = DecisionTreeClassifier(random_state=42)
+
+# Train the model on the training data
+dt_model.fit(X_train, y_train)
+
+# Make predictions on the validation set
+y_pred_val = dt_model.predict(X_val)
+
+# Evaluate the model on the validation set
+print("Validation Set Performance:")
+print("Accuracy:", accuracy_score(y_val, y_pred_val))
+print("Classification Report:\n", classification_report(y_val, y_pred_val))
+print("Confusion Matrix:\n", confusion_matrix(y_val, y_pred_val))
+
+# Make predictions on the test set
+y_pred_test = dt_model.predict(X_test)
+
+# Evaluate the model on the test set
+print("\nTest Set Performance:")
+print("Accuracy:", accuracy_score(y_test, y_pred_test))
+print("Classification Report:\n", classification_report(y_test, y_pred_test))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_test))
+
+# Visualize the feature importance
+feature_importances = selector.scores_
+feature_names = X.columns
+plt.figure(figsize=(10,6))
+sns.barplot(x=feature_importances, y=feature_names)
+plt.xlabel("Feature Importance")
+plt.ylabel("Feature Names")
+plt.title("Feature Importance")
+plt.show()
+
+# Visualize the distribution of the target variable
+plt.figure(figsize=(10,6))
+sns.histplot(y, bins=10)
+plt.xlabel("Target Variable")
+plt.ylabel("Frequency")
+plt.title("Distribution of Target Variable")
+plt.show()
