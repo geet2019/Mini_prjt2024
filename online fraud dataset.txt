@@ -122,11 +122,3 @@ plt.xlabel("Feature Importance")
 plt.ylabel("Feature Names")
 plt.title("Feature Importance")
 plt.show()
-
-# Visualize the distribution of the target variable
-plt.figure(figsize=(10,6))
-sns.histplot(y, bins=10)
-plt.xlabel("Target Variable")
-plt.ylabel("Frequency")
-plt.title("Distribution of Target Variable")
-plt.show()
